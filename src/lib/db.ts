@@ -119,17 +119,19 @@ export class FilelistDB {
    * @returns Array of matching filenames
    */
   async searchFileList(query): Promise<string[]> {
-    //const start2 = Date.now();
+    const start = Date.now();
     //const start3 = Date.now();
     const file = await this.getFileList();
     //console.log("files-fetch: "+(Date.now()-start3));
     if (!file) return [];
-    //console.log(FilelistDB.file);
+    console.log("File loaded in "+ (Date.now()-start) +"ms");
     // Fallback to main thread if workers are not supported
     //if (typeof Worker === "undefined") {
     //console.log("regex: "+regex);
     //const start = Date.now();
+    const start2 = Date.now();
     let res=file.match(query);
+    console.log("Query ran in "+ (Date.now()-start2) +"ms");
       //console.log(res);//files.filter((file) => regex.test(file));
       //console.log("main-thered-search: "+(Date.now()-start));
       //console.log("total-search: "+(Date.now()-start2));

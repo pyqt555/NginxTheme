@@ -12,7 +12,7 @@ export const useFileExplorer = () => {
   const { mode, setLoading } = useSearch();
   const [results, setResults] = useState<SearchResult[]>([]);
   const [error, setError] = useState<Error | null>(null);
-  const useRegex=true;
+  const useRegex = false;
   // Refs to store version and DB instance across renders
   const versionKeyRef = useRef<string | null>(null);
   const dbInstanceRef = useRef<FilelistDB | null>(null);
@@ -45,7 +45,7 @@ export const useFileExplorer = () => {
           const metadata = await response.json();
           return metadata.version;
         }
-      } catch {}
+      } catch { }
       return patch;
     },
     [],
@@ -102,12 +102,12 @@ export const useFileExplorer = () => {
           }
           dbInstanceRef.current = new FilelistDB(versionKey);
         }
-        
+
         const db = dbInstanceRef.current;
 
         // Get file list from cache or network
         let file = await db.getFileList_NoCache();
-        if (!file){
+        if (!file) {
           const filelistUrl = `${RAW_HOST}/${patch}/cdragon/files.exported.txt`;
           const response = await fetch(filelistUrl, {
             signal: abortController.signal,
@@ -124,24 +124,39 @@ export const useFileExplorer = () => {
         // Build regex with local prefix if in local mode
 
         const prefix = localPrefix();
-        let Query=trimmedQuery;
-        if(!useRegex){
-        Query = escapeRegex(trimmedQuery);}
 
-        let regex: RegExp;
-        try {
-          regex = new RegExp(`^${prefix}.*?(?:${Query}).*$`, "gim");
-          
-        } catch (e) {
-          console.error("Invalid regex", e);
-          setResults([]);
-          return;
+        let matches;
+        if (!useRegex) {
+          let pt_Query = escapeRegex(trimmedQuery);
+         
+          let regex : RegExp;
+          try {
+            regex = new RegExp(`^${prefix}.*?(?:${pt_Query}).*$`, "gim");
+
+          } catch (e) {
+            console.error("Invalid regex", e);
+            setResults([]);
+            return;
+          }
+          matches = await db.searchFileList(regex);
+        }
+        else {
+          let regex: RegExp;
+          try {
+            regex = new RegExp(`^${prefix}.*?(?:${trimmedQuery}).*$`, "gim");
+
+          } catch (e) {
+            console.error("Invalid regex", e);
+            setResults([]);
+            return;
+          }
+          matches = await db.searchFileList(regex);
         }
 
         // Perform search (worker‑based)
-        const matches = await db.searchFileList(regex);
+
         const currentPatch = getPatch();
-        if (matches){
+        if (matches) {
           setResults(
             matches.map((filename) => ({
               filename,
@@ -149,7 +164,7 @@ export const useFileExplorer = () => {
             })),
           );
         }
-        else{
+        else {
           setResults(
             []
           );
