@@ -12,7 +12,7 @@ export const useFileExplorer = () => {
   const { mode, setLoading } = useSearch();
   const [results, setResults] = useState<SearchResult[]>([]);
   const [error, setError] = useState<Error | null>(null);
-  const useRegex=true;
+  const useRegex = true;
   // Refs to store version and DB instance across renders
   const versionKeyRef = useRef<string | null>(null);
   const dbInstanceRef = useRef<FilelistDB | null>(null);
@@ -45,7 +45,7 @@ export const useFileExplorer = () => {
           const metadata = await response.json();
           return metadata.version;
         }
-      } catch {}
+      } catch { }
       return patch;
     },
     [],
@@ -102,12 +102,12 @@ export const useFileExplorer = () => {
           }
           dbInstanceRef.current = new FilelistDB(versionKey);
         }
-        
+
         const db = dbInstanceRef.current;
 
         // Get file list from cache or network
         let file = await db.getFileList_NoCache();
-        if (!file){
+        if (!file) {
           const filelistUrl = `${RAW_HOST}/${patch}/cdragon/files.exported.txt`;
           const response = await fetch(filelistUrl, {
             signal: abortController.signal,
@@ -124,24 +124,20 @@ export const useFileExplorer = () => {
         // Build regex with local prefix if in local mode
 
         const prefix = localPrefix();
-        let Query=trimmedQuery;
-        if(!useRegex){
-        Query = escapeRegex(trimmedQuery);}
 
+        const content = useRegex ? trimmedQuery : escapeRegex(trimmedQuery);
         let regex: RegExp;
         try {
-          regex = new RegExp(`^${prefix}.*?(?:${Query}).*$`, "gim");
-          
-        } catch (e) {
+          regex = new RegExp(`^${prefix}.*?(?:${content}).*$`, "gim");
+        }
+        catch (e) {
           console.error("Invalid regex", e);
           setResults([]);
           return;
         }
-
-        // Perform search (worker‑based)
+        console.log(regex);
         const matches = await db.searchFileList(regex);
-        const currentPatch = getPatch();
-        if (matches){
+        if (matches) {
           setResults(
             matches.map((filename) => ({
               filename,
@@ -149,7 +145,7 @@ export const useFileExplorer = () => {
             })),
           );
         }
-        else{
+        else {
           setResults(
             []
           );

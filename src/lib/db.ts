@@ -20,7 +20,7 @@ export class FilelistDB {
   >();
 
   constructor(version: string) {
-    
+
     this.version = version;
     //console.log(version);
     //FilelistDB.filelist=null;
@@ -29,7 +29,7 @@ export class FilelistDB {
 
   private static async getConnection(): Promise<IDBDatabase> {
     if (FilelistDB.dbConnection) return FilelistDB.dbConnection;
-   
+
     FilelistDB.dbConnection = new Promise<IDBDatabase>((resolve, reject) => {
       const request = indexedDB.open(DB_NAME, DB_VERSION);
       request.onerror = () => reject(request.error);
@@ -40,10 +40,10 @@ export class FilelistDB {
         if (!db.objectStoreNames.contains(STORE_NAME)) {
           db.createObjectStore(STORE_NAME, { keyPath: "version" });
         }
-        
+
       };
     });
- 
+
     return FilelistDB.dbConnection;
   }
 
@@ -52,7 +52,7 @@ export class FilelistDB {
   async getFileList(): Promise<string | undefined> {
     if (FilelistDB.file) return FilelistDB.file;
     const db = await FilelistDB.getConnection();
-    FilelistDB.file=new Promise((resolve, reject) => {
+    FilelistDB.file = new Promise((resolve, reject) => {
       const tx = db.transaction(STORE_NAME, "readonly");
       const store = tx.objectStore(STORE_NAME);
       const request = store.get(this.version);
@@ -65,8 +65,8 @@ export class FilelistDB {
     });
     return FilelistDB.file
   }
-  async getFileList_NoCache(): Promise<string| undefined> {
-    
+  async getFileList_NoCache(): Promise<string | undefined> {
+
     const db = await FilelistDB.getConnection();
     return new Promise((resolve, reject) => {
       const tx = db.transaction(STORE_NAME, "readonly");
@@ -79,12 +79,12 @@ export class FilelistDB {
         resolve(result?.file);
       };
     });
-    
+
   }
 
-  async saveFileList(file:string): Promise<void> {
-    
-    FilelistDB.file=null;
+  async saveFileList(file: string): Promise<void> {
+
+    FilelistDB.file = null;
     const db = await FilelistDB.getConnection();
     return new Promise((resolve, reject) => {
       const tx = db.transaction(STORE_NAME, "readwrite");
@@ -93,7 +93,7 @@ export class FilelistDB {
       request.onerror = () => reject(request.error);
       request.onsuccess = () => resolve();
     });
-    
+
   }
 
   async deleteFileList(): Promise<void> {
@@ -119,21 +119,23 @@ export class FilelistDB {
    * @returns Array of matching filenames
    */
   async searchFileList(query): Promise<string[]> {
-    //const start2 = Date.now();
+    const start = Date.now();
     //const start3 = Date.now();
     const file = await this.getFileList();
-    //console.log("files-fetch: "+(Date.now()-start3));
+    console.log("files-fetch: "+(Date.now()-start));
     if (!file) return [];
     //console.log(FilelistDB.file);
     // Fallback to main thread if workers are not supported
     //if (typeof Worker === "undefined") {
     //console.log("regex: "+regex);
     //const start = Date.now();
-    let res=file.match(query);
-      //console.log(res);//files.filter((file) => regex.test(file));
-      //console.log("main-thered-search: "+(Date.now()-start));
-      //console.log("total-search: "+(Date.now()-start2));
-      
+    const start2 = Date.now();
+    let res = file.match(query);
+    console.log("query: "+(Date.now()-start2));
+    //console.log(res);//files.filter((file) => regex.test(file));
+    //console.log("main-thered-search: "+(Date.now()-start));
+    //console.log("total-search: "+(Date.now()-start2));
+
     return res;
     /*}
     const start4 = Date.now();
@@ -154,7 +156,7 @@ export class FilelistDB {
       });
     }).then((data) =>{console.log(("total-search,since_worker: "+(Date.now()-start2))+","+(Date.now()-start5));return data;});
     */
-  
+
   }
 
   private initWorker() {
