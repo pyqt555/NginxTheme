@@ -124,7 +124,7 @@ export class FilelistDB {
     const file = await this.getFileList();
     console.log("files-fetch: " + (Date.now() - start));
     if (!file) return [];
-    //console.log(FilelistDB.file);
+    console.log("File loaded in "+ (Date.now()-start) +"ms");
     // Fallback to main thread if workers are not supported
     if (typeof Worker === "undefined") {
       //console.log("regex: "+regex);
