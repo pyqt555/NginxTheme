@@ -129,6 +129,8 @@ export const useFileExplorer = () => {
         let regex: RegExp;
         try {
           regex = new RegExp(`^${prefix}.*?(?:${content}).*$`, "gim");
+          //const fast_regexp =new RegExp(`$\\n${prefix}[^\\n]*?${content}[^\\n]*\\n`,"gim")
+          //regex=fast_regexp;
         }
         catch (e) {
           console.error("Invalid regex", e);

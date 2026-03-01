@@ -122,40 +122,41 @@ export class FilelistDB {
     const start = Date.now();
     //const start3 = Date.now();
     const file = await this.getFileList();
-    console.log("files-fetch: "+(Date.now()-start));
+    console.log("files-fetch: " + (Date.now() - start));
     if (!file) return [];
     //console.log(FilelistDB.file);
     // Fallback to main thread if workers are not supported
-    //if (typeof Worker === "undefined") {
-    //console.log("regex: "+regex);
-    //const start = Date.now();
-    const start2 = Date.now();
-    let res = file.match(query);
-    console.log("query: "+(Date.now()-start2));
-    //console.log(res);//files.filter((file) => regex.test(file));
-    //console.log("main-thered-search: "+(Date.now()-start));
-    //console.log("total-search: "+(Date.now()-start2));
+    if (typeof Worker === "undefined") {
+      //console.log("regex: "+regex);
+      //const start = Date.now();
+      const start2 = Date.now();
+      let res = file.match(query);
+      console.log("query: " + (Date.now() - start2));
+      //console.log(res);
+      //console.log(res);//files.filter((file) => regex.test(file));
+      //console.log("main-thered-search: "+(Date.now()-start));
+      //console.log("total-search: "+(Date.now()-start2));
 
-    return res;
-    /*}
-    const start4 = Date.now();
+      return res;
+    }
+
+
     this.initWorker();
-    console.log("worker-setup: "+(Date.now()-start4));
+
     const requestId = Math.random().toString(36).substring(2) + Date.now();
-    const start5= Date.now();
+
     return new Promise<string[]>((resolve, reject) => {
       this.workerPromiseMap.set(requestId, { resolve, reject });
 
       // biome-ignore lint/style/noNonNullAssertion: debug
       this.worker!.postMessage({
         type: "search",
-        files,
-        pattern: regex.source,
-        flags: regex.flags,
+        file,
+        query,
         requestId,
       });
-    }).then((data) =>{console.log(("total-search,since_worker: "+(Date.now()-start2))+","+(Date.now()-start5));return data;});
-    */
+    }).then((data) =>{console.log("total-query-time "+(Date.now()-start));return data;});
+
 
   }
 
@@ -164,13 +165,13 @@ export class FilelistDB {
 
     const workerCode = `
       self.onmessage = (e) => {
-        const { type, files, pattern, flags, requestId } = e.data;
+        const { type, file, query, requestId } = e.data;
         if (type === 'search') {
           try {
-            const regex = new RegExp(pattern, flags);
+          
             const start = Date.now();
-            const matches =files.filter(file => regex.test(file));
-            console.log("2nd-thread-search: "+(Date.now()-start));
+            const matches =file.match(query);
+            console.log("worker-query: "+(Date.now()-start));
             self.postMessage({ type: 'result', matches, requestId });
           } catch (err) {
             self.postMessage({ type: 'error', error: err.message, requestId });
